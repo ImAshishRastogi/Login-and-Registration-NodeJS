@@ -32,39 +32,9 @@ var userSchema = new Schema({
 });
 var userDB = mongoose.model('userDB',userSchema);
 
-//-----------------------------------------------------------------------------------------------------------------------------
 
-app.get("/",function(request,response) {
-    console.log("enter in HOME PAGE");
-    response.sendFile(__dirname+"/"+"home_page.html");
-})
-
-app.get("/register",function(req,res) {
-    console.log("enter in REGISTER PAGE")
-    
-    if(req.session.user){
-        console.log("SESSION exist for user : "+ req.session.user.user_name);
-        console.log("Redirecting to LOGGEDIN PAGE ");
-        res.redirect("/loggedin");
-     }
-     
-    res.sendFile(__dirname+"/"+"register_page.html");
-});
-
-
-app.get("/login",function(req,res) {
-    console.log("enter in LOGIN PAGE")
-   
-    if(req.session.user){
-        console.log("SESSION exist for user : "+ req.session.user.user_name);
-        console.log("Redirecting to LOGGEDIN PAGE ");
-        res.redirect("/loggedin");
-     }
-     
-    res.sendFile(__dirname+"/"+"login_page.html");
-});
-
-function checkToken(req) {
+//custom fuction
+function checkToken(req,res) {
     console.log(req)
     var token =req.get('authorization');
     console.log(token);
@@ -84,27 +54,27 @@ function checkToken(req) {
         res.redirect("/login");
     }
 }
-app.get("/loggedin",function(req,res) {
-    
-    console.log("enter  in LOGGEDIN PAGE")
-    if(req.session.user){
-        console.log("logged in user : "+ req.session.user.user_name);
-        res.send("<head><title>HOME</title></head><body><font color=green>"+req.session.user.user_name+
-        " loggedn in<font><br /><a href=/profile> PROFILE<a></body><br /><a href=/logout> LOGOUT<a></body>");
-     } else { 
-        console.log("SESSION doesn't exist for any user. \n Redirecting to LOGIN PAGE ");
-        res.redirect("/login");
-     }
-     
-});
 
-app.get("/profile",function(req,res) {
-    var token = jwt.sign({id: req.session.user.user_name},config.secret,{expiresIn : 60});
-    console.log(token)
-    res.send("<head><title>PROFILE</title></head><body><font color=green> "+req.session.user.user_name+"<font><br /><a href=/logout> LOGOUT<a></body>");
+//-----------------------------------------------------------------------------------------------------------------------------
+
+app.get("/",function(request,response) {
+    console.log("enter in HOME PAGE");
+    response.sendFile(__dirname+"/"+"home_page.html");
 })
 
-app.post("/register-submit", function(req ,res) {
+app.get("/register",function(req,res) {
+    console.log("enter in REGISTER PAGE")
+    
+    if(req.session.user){
+        console.log("SESSION exist for user : "+ req.session.user.user_name);
+        console.log("Redirecting to LOGGEDIN PAGE ");
+        res.redirect("/loggedin");
+     }
+     
+    res.sendFile(__dirname+"/"+"register_page.html");
+});
+
+app.post("/register", function(req ,res) {
     console.log("enter in REGISTER POST REQUEST(register-submit)");
     if(!req.body.user_name || !req.body.password || !req.body.email){
         console.log("INVALID DETAILS");
@@ -133,12 +103,25 @@ app.post("/register-submit", function(req ,res) {
 })
 
 
+app.get("/login",function(req,res) {
+    console.log("enter in LOGIN PAGE")
+   
+    if(req.session.user){
+        console.log("SESSION exist for user : "+ req.session.user.user_name);
+        console.log("Redirecting to LOGGEDIN PAGE ");
+        res.redirect("/loggedin");
+     }
+     
+    res.sendFile(__dirname+"/"+"login_page.html");
+});
 
-app.post("/check-login",function(req,res) {
+
+
+app.post("/login",function(req,res) {
     console.log("enter in LOGIN POST REQUEST(check-login)");
     if(!req.body.user_name || !req.body.password){
         console.log("INVALID DETAILS");
-        res.send("<font color=red>Invalid details!</font><br /><a href='/login'>BACK</a>");
+        res.send("<font color=red>Empty field!</font><br /><a href='/login'>BACK</a>");
      } else {
          userDB.findOne({user_name : req.body.user_name, password : req.body.password},{_id:0,user_name:1,password:1},function(err, response) {
              if(response==null ) {
@@ -163,12 +146,55 @@ app.post("/check-login",function(req,res) {
                 //res.header('authorization', token).send();
                 //console.log(res)
                 //checkToken(res)
+                
                 console.log("Redirecting to LOGGEDIN PAGE");
                 res.redirect("/loggedin");
+                
+               /*
+               if(req.session.user){
+                console.log("logged in user : "+ req.session.user.user_name);
+                res.send("<head><title>HOME</title></head><body><font color=green>"+req.session.user.user_name+
+                " loggedn in<font><br /><a href='/loggedin' method='POST' name='profile'> PROFILE<a></body><br /><a href='/logout'> LOGOUT<a></body>");
+                
+             } else { 
+                console.log("SESSION doesn't exist for any user. \n Redirecting to LOGIN PAGE ");
+                res.redirect("/login");
+             }
+             */
+
+
              }
          })
      }
 })
+
+app.get("/loggedin",function(req,res) {
+    
+    console.log("enter  in LOGGEDIN PAGE")
+    if(req.session.user){
+        console.log("logged in user : "+ req.session.user.user_name);
+        res.send("<head><title>HOME</title></head><body><font color=green>"+req.session.user.user_name+
+        " loggedn in<font><br /><a href='/profile'> PROFILE<a></body><br /><a href='/logout'> LOGOUT<a></body>");
+        
+     } else { 
+        console.log("SESSION doesn't exist for any user. \n Redirecting to LOGIN PAGE ");
+        res.redirect("/login");
+     }
+     
+});
+
+app.get("/profile",function(req,res) {
+    //var token = jwt.sign({id: req.session.user.user_name},config.secret,{expiresIn : 60});
+    //console.log(token)
+    console.log("enter  in PROFILE PAGE")
+    res.send("<head><title>PROFILE</title></head><body><font color=green> "+req.session.user.user_name+"<font><br /><a href=/logout> LOGOUT<a></body>");
+})
+
+
+
+
+
+
 
 app.get('/logout', function(req, res){
     console.log("enter in LOGOUT PAGE");
